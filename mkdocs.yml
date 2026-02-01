@@ -1,53 +1,140 @@
+# PATH: mkdocs.yml
+# PURPOSE: MkDocs configuration for developers.medtwin.ai
+
 site_name: MedTWIN Developers
 site_url: https://developers.medtwin.ai
-site_description: Developer portal for MedTWIN APIs (Rubric Gates as a service)
+site_description: Developer portal for MedTWIN APIs — Rubric Gates as a service
 site_author: MedTWIN AI
 
 repo_name: Medtwin-ai/developers-portal
 repo_url: https://github.com/Medtwin-ai/developers-portal
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2026 MedTWIN AI
 
 theme:
   name: material
+  custom_dir: docs/overrides
+  logo: assets/logo.svg
+  favicon: assets/favicon.ico
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: indigo
       accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: indigo
       accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   font:
     text: Inter
     code: JetBrains Mono
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
+    - navigation.expand
+    - navigation.path
     - navigation.top
+    - navigation.footer
+    - navigation.indexes
     - search.suggest
     - search.highlight
+    - search.share
     - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+    - announce.dismiss
+  icon:
+    repo: fontawesome/brands/github
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Medtwin-ai
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/company/medtwin
+  generator: false
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
+  # Python Markdown
+  - abbr
   - admonition
-  - pymdownx.details
-  - pymdownx.superfences
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
   - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+  # PyMdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: Medtwin-ai
+      repo: rubric-gates
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
 
 plugins:
-  - search
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - minify:
+      minify_html: true
 
 nav:
   - Home: index.md
   - Getting Started:
       - Quickstart: getting-started/quickstart.md
+      - Integration Guide: getting-started/integration.md
   - Rubric Gates:
       - Overview: rubric-gates/index.md
+      - Certificate Schema: rubric-gates/certificates.md
+      - Local Verification: rubric-gates/verification.md
   - API Reference:
       - Authentication: api/authentication.md
       - Rubric Gates API: api/rubric-gates.md
   - Security:
       - Data Handling: security/data-handling.md
 
-copyright: Copyright &copy; 2026 MedTWIN AI
-
+watch:
+  - docs

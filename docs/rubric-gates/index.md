@@ -1,120 +1,203 @@
-<!--
-PATH: docs/rubric-gates/index.md
-PURPOSE: Conceptual overview of Rubric Gates for developers.
--->
-
 # Rubric Gates Overview
 
 Rubric Gates is MedTWIN's certificate-first validation framework for AI-generated clinical research artifacts.
 
-## What Problem Does It Solve?
+## The Problem
 
-AI agents generating clinical cohorts, mappings, and analyses need **auditable evidence** that their outputs are:
+AI agents generating clinical artifacts (cohort definitions, statistical analyses, manuscript drafts) face a fundamental trust problem:
 
-1. **Deterministic** — reproducible from specs + seeds
-2. **Safe** — no PHI leakage, no unsupported clinical claims
-3. **Clinically Sound** — physiologically plausible, temporally coherent
-4. **Benchmark-aligned** — matches reference implementations on known datasets
+- **No verifiable evidence** that outputs are correct
+- **No audit trail** for how decisions were made
+- **No standardized checks** for clinical validity
+- **No reproducibility** guarantees
 
-## The Certificate Model
+## The Solution
 
-Every artifact produced by MedTWIN's agentic system comes with a **certificate** — a JSON document proving:
+Rubric Gates provides **certificates**—machine-checkable proof that every artifact passed a hierarchy of quality gates.
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                           CERTIFICATE                                 │
-├──────────────────────────────────────────────────────────────────────┤
-│ artifact: {type, version, hash}                                       │
-│ rubrics:                                                              │
-│   tier_1: {pass: bool, checks: [...]}  ← Constitution                │
-│   tier_2: {pass: bool, checks: [...]}  ← Clinical invariants         │
-│   tier_3: {pass: bool, checks: [...]}  ← Task benchmarks             │
-│ gate_decision: {decision, blocking_reasons, required_fixes}          │
-│ provenance: {audit_trace_id, run_manifest_id, rubric_versions}       │
-└──────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         RUBRIC GATES PIPELINE                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────────┐  │
+│   │ Artifact │ ──▶ │  Tier 1  │ ──▶ │  Tier 2  │ ──▶ │    Tier 3    │  │
+│   │  Input   │     │Constitution    │ Clinical │     │  Benchmarks  │  │
+│   └──────────┘     └──────────┘     └──────────┘     └──────────────┘  │
+│                           │               │                │            │
+│                           ▼               ▼                ▼            │
+│                    ┌─────────────────────────────────────────────┐     │
+│                    │              GATE DECISION                   │     │
+│                    │         approve / revise / block            │     │
+│                    └─────────────────────────────────────────────┘     │
+│                                        │                                │
+│                                        ▼                                │
+│                              ┌──────────────────┐                      │
+│                              │   CERTIFICATE    │                      │
+│                              │  (verifiable)    │                      │
+│                              └──────────────────┘                      │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Hierarchical Rubrics
 
-### Tier 1: Constitution (Non-negotiable)
+Rubrics are organized into three tiers with increasing specificity:
 
-These are **universal principles** that apply to ALL outputs:
+### Tier 1: Constitution (Universal)
 
-- **Determinism** — Same spec + seed → same output
-- **Audit completeness** — Every decision has a trace
-- **PHI protection** — No identifiable information in artifacts
-- **Outcome claim discipline** — No clinical claims without validation
+Non-negotiable requirements that apply to **all** outputs:
 
-Tier 1 failures → **BLOCK** (human review required)
+| Check | Description | Gate |
+|-------|-------------|------|
+| `determinism_required` | Same spec + seed → same output | Block |
+| `audit_trace_complete` | Every decision has a trace ID | Block |
+| `no_phi_in_artifacts` | No identifiable information in certificates | Block |
+| `no_outcome_claims` | No clinical claims without validation | Block |
 
-### Tier 2: Clinical Invariants (Domain-transferable)
+!!! danger "Tier 1 Failures"
+    Tier 1 failures result in **BLOCK** — the artifact cannot be used and requires human review.
 
-These encode **clinical domain knowledge**:
+### Tier 2: Clinical Invariants (Domain)
 
-- **Unit consistency** — All features have declared units
-- **Plausible ranges** — Age ∈ [0, 120], HR ∈ [20, 300], etc.
-- **Temporal coherence** — No future-leakage in retrospective studies
-- **Outcome leakage prevention** — Labels don't leak via features
+Domain knowledge that transfers across datasets:
 
-Tier 2 failures → **BLOCK** (critical) or **REVISE** (fixable)
+| Check | Description | Gate |
+|-------|-------------|------|
+| `unit_consistency` | All features have declared units | Block |
+| `plausible_ranges` | Values fall within physiological bounds | Revise |
+| `temporal_coherence` | No future-leakage in retrospective studies | Block |
+| `outcome_leakage` | Labels don't leak via features | Block |
 
-### Tier 3: Task Benchmarks (Dataset-specific)
+!!! warning "Tier 2 Failures"
+    Critical Tier 2 failures result in **BLOCK**. Minor failures may result in **REVISE**.
 
-These are **empirical checks** against known-good references:
+### Tier 3: Task Benchmarks (Dataset-Specific)
 
-- **SQL executes** — Cohort specs run without errors
-- **Cohort overlap** — Jaccard similarity ≥ threshold with reference
-- **Metric agreement** — Statistical results within tolerance
+Empirical checks against known-good references:
 
-Tier 3 failures → **REVISE** (agent can retry)
+| Check | Description | Gate |
+|-------|-------------|------|
+| `sql_executes` | Cohort specs run without errors | Revise |
+| `cohort_overlap` | Jaccard similarity ≥ 0.7 with reference | Revise |
+
+!!! info "Tier 3 Failures"
+    Tier 3 failures result in **REVISE** — the artifact can be fixed and resubmitted.
 
 ## Gate Decisions
 
 | Decision | Meaning | Action |
 |----------|---------|--------|
-| `approve` | All tiers passed | Ship the artifact |
-| `revise` | Tier 3 issues | Auto-retry or manual fix |
-| `block` | Tier 1/2 violations | Human review required |
+| **Approve** | All tiers passed | Use the artifact, store the certificate |
+| **Revise** | Tier 3 failures | Fix issues based on `required_fixes`, resubmit |
+| **Block** | Tier 1 or 2 failures | Escalate to human review, investigate root cause |
 
-## Public vs. Private Components
+### Decision Flow
 
-| Component | Visibility | Purpose |
-|-----------|------------|---------|
-| **Rubric definitions** (YAML) | Public | Anyone can read what's being checked |
-| **Certificate schema** | Public | Anyone can verify certificate structure |
-| **Verifier CLI** | Public | Anyone can validate certificates locally |
-| **Evaluation API** | Private | MedTWIN runs the evaluation logic |
-| **Agentic generation** | Private | How MedTWIN agents produce artifacts |
-| **Metacognition/refinement** | Private | How agents self-correct based on rubric failures |
-
-## Integration Paths
-
-### 1. Verify Certificates Locally
-
-```bash
-pip install git+https://github.com/Medtwin-ai/rubric-gates.git
-rubric-gates verify certificate.json
+```
+                    ┌─────────────┐
+                    │  Evaluate   │
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+              ┌─────│  Tier 1 OK? │─────┐
+              │ No  └─────────────┘ Yes │
+              │                         │
+              ▼                         ▼
+        ┌───────────┐           ┌──────────────┐
+        │   BLOCK   │     ┌─────│  Tier 2 OK?  │─────┐
+        │ (human)   │     │ No  └──────────────┘ Yes │
+        └───────────┘     │                          │
+                          ▼                          ▼
+                    ┌───────────┐          ┌──────────────┐
+                    │   BLOCK   │    ┌─────│  Tier 3 OK?  │─────┐
+                    │ (human)   │    │ No  └──────────────┘ Yes │
+                    └───────────┘    │                          │
+                                     ▼                          ▼
+                               ┌───────────┐            ┌───────────┐
+                               │  REVISE   │            │  APPROVE  │
+                               │ (auto)    │            │ (ship it) │
+                               └───────────┘            └───────────┘
 ```
 
-### 2. Call the Evaluation API
+## Deferral to Humans
 
-```bash
-curl -X POST https://api.medtwin.ai/v1/evaluate \
-  -H "Authorization: Bearer $MEDTWIN_API_KEY" \
-  -d '{"artifact": {...}, "context": {...}}'
+When the system is uncertain or encounters blocking issues, it defers to human review:
+
+```json
+{
+  "gate_decision": {
+    "decision": "block",
+    "blocking_reasons": ["Tier 2 violation: outcome leakage detected"],
+    "required_fixes": ["Remove feature X from pre-index time window"],
+    "deferral": {
+      "recommended": true,
+      "to": "human_review"
+    }
+  }
+}
 ```
 
-### 3. Integrate in CI/CD
+Deferral is recommended when:
+
+- Critical safety checks fail
+- Uncertainty is high
+- Novel edge cases are detected
+- Audit trail is incomplete
+
+## Rubric Versioning
+
+Rubrics are versioned for reproducibility:
+
+```json
+{
+  "provenance": {
+    "rubric_versions": {
+      "tier1": "1.0.0",
+      "tier2": "1.0.0",
+      "tier3": "1.0.0"
+    }
+  }
+}
+```
+
+Version changes follow semantic versioning:
+
+- **MAJOR**: Breaking changes to check logic
+- **MINOR**: New checks added
+- **PATCH**: Bug fixes, threshold adjustments
+
+## Adding Custom Rubrics
+
+Organizations can extend rubrics for their specific needs:
 
 ```yaml
-# GitHub Actions example
-- name: Verify artifact certificate
-  run: |
-    rubric-gates verify ./artifacts/cohort_certificate.json
+# custom_rubrics/tier3/my_org_checks.yaml
+rubric_suite:
+  id: tier3.my_org_custom
+  tier: 3
+  version: "1.0.0"
+  purpose: "Organization-specific validation checks"
+  checks:
+    - id: tier3.internal_review_approved
+      description: "Internal review process completed"
+      check_type: policy
+      severity: major
+      gate: revise
 ```
 
-## Learn More
+## Open Source Components
 
-- [API Reference](../api/rubric-gates.md)
-- [Public Repo: rubric-gates](https://github.com/Medtwin-ai/rubric-gates)
-- [Research Paper Blueprint](https://research.medtwin.ai/research/)
+| Component | Repository | Purpose |
+|-----------|------------|---------|
+| Rubric definitions | [rubric-gates](https://github.com/Medtwin-ai/rubric-gates) | YAML rubric specs |
+| Certificate schema | [rubric-gates](https://github.com/Medtwin-ai/rubric-gates) | JSON schema |
+| Verifier CLI | [rubric-gates](https://github.com/Medtwin-ai/rubric-gates) | Local verification |
+| Benchmark harness | [rubric-gates](https://github.com/Medtwin-ai/rubric-gates) | Run evaluations |
+
+## Next Steps
+
+- [Certificate Schema](certificates.md) — Detailed certificate structure
+- [Local Verification](verification.md) — Verify certificates offline
+- [API Reference](../api/rubric-gates.md) — Evaluate via API
+- [Integration Guide](../getting-started/integration.md) — CI/CD patterns

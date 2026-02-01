@@ -1,0 +1,92 @@
+/* PATH: docs/stylesheets/extra.css */
+/* PURPOSE: Custom styles for MedTWIN developer portal */
+
+/* Custom properties */
+:root {
+  --md-primary-fg-color: #4f46e5;
+  --md-primary-fg-color--light: #6366f1;
+  --md-primary-fg-color--dark: #3730a3;
+  --md-accent-fg-color: #8b5cf6;
+}
+
+/* Logo sizing */
+.md-header__button.md-logo img {
+  height: 1.5rem;
+}
+
+/* Better code blocks */
+.highlight code {
+  font-size: 0.85em;
+}
+
+/* Card grid for home page */
+.grid.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.grid.cards > * {
+  padding: 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+}
+
+.grid.cards > *:hover {
+  border-color: var(--md-accent-fg-color);
+}
+
+/* Decision table styling */
+table.decision-table td:first-child {
+  font-weight: 600;
+}
+
+/* Certificate diagram styling */
+pre.certificate-diagram {
+  background: var(--md-code-bg-color);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-family: var(--md-code-font-family);
+  font-size: 0.75em;
+  line-height: 1.4;
+  overflow-x: auto;
+}
+
+/* Admonition customization */
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-color: #f59e0b;
+}
+
+.md-typeset .admonition.danger,
+.md-typeset details.danger {
+  border-color: #ef4444;
+}
+
+/* API endpoint styling */
+.api-endpoint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--md-code-bg-color);
+  border-radius: 0.25rem;
+  font-family: var(--md-code-font-family);
+  font-size: 0.9em;
+}
+
+.api-endpoint .method {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.api-endpoint .method.get { color: #22c55e; }
+.api-endpoint .method.post { color: #3b82f6; }
+.api-endpoint .method.put { color: #f59e0b; }
+.api-endpoint .method.delete { color: #ef4444; }
+
+/* Footer styling */
+.md-footer-meta {
+  background: var(--md-default-bg-color--light);
+}

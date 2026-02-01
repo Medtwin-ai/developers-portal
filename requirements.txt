@@ -1,2 +1,11 @@
-mkdocs-material
+# PATH: requirements.txt
+# PURPOSE: Dependencies for MedTWIN developers portal
 
+# MkDocs with Material theme
+mkdocs-material>=9.5.0
+
+# Plugins
+mkdocs-minify-plugin>=0.8.0
+
+# Extensions (usually bundled with mkdocs-material, but explicit for CI)
+pymdown-extensions>=10.0
