@@ -1,0 +1,53 @@
+site_name: MedTWIN Developers
+site_url: https://developers.medtwin.ai
+site_description: Developer portal for MedTWIN APIs (Rubric Gates as a service)
+site_author: MedTWIN AI
+
+repo_name: Medtwin-ai/developers-portal
+repo_url: https://github.com/Medtwin-ai/developers-portal
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: purple
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: purple
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quickstart: getting-started/quickstart.md
+  - Rubric Gates:
+      - Overview: rubric-gates/index.md
+  - API Reference:
+      - Authentication: api/authentication.md
+      - Rubric Gates API: api/rubric-gates.md
+  - Security:
+      - Data Handling: security/data-handling.md
+
+copyright: Copyright &copy; 2026 MedTWIN AI
+

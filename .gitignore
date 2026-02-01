@@ -1,0 +1,10 @@
+# PATH: .gitignore
+# PURPOSE: Git ignore rules for MkDocs-based portal
+
+.DS_Store
+.idea/
+.vscode/
+.venv/
+venv/
+site/
+
